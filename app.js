@@ -1,5 +1,5 @@
 /* 
-A strict MVVM implementation!
+A strict MVVM implementation! All in one file to make it easier to follow along.
 
 MVVM as defined in Knockout.js Documentation:
 
@@ -46,6 +46,7 @@ server-side code to read and write this stored model data.
 ContactModel = function () {
 	var self = this;
 	//all of the values we ever care about w/ contacts on the client
+	//not ALL of the API provided properties are here.
 	self.name = ko.observable("");
 	self.phone = ko.observable("");
 	self.email = ko.observable("");
@@ -71,6 +72,7 @@ ContactModel = function () {
 OutletModel = function () {
 	var self = this;
 	//all of the values we ever care about w/ outlets on the client
+	//not ALL of the API provided properties are here.
 	self.name = ko.observable("");
 	self.circulation = ko.observable(0);
 	self.phone = ko.observable("");
@@ -202,7 +204,8 @@ ko.applyBindings(new ContactQuickStatsViewModel(), $("#contact-quick-stats").get
 ko.applyBindings(new OutletQuickStatsViewModel(), $("#outlet-quick-stats").get(0));
 
 
-/* update the logical model. the value is synced with any relevant viewModel. try these:
+/* update the logical model. the value is synced with any relevant viewModel.
+try these:
 
 Models.outlet.name("National Enquirer")
 
