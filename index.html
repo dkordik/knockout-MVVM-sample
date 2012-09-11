@@ -13,12 +13,14 @@
 		<dl> <dt>Name</dt> <dd data-bind="text: name"></dd> </dl>
 		<dl> <dt>Phone</dt> <dd data-bind="text: phone"></dd> </dl>
 		<dl> <dt>Email</dt> <dd data-bind="text: email"></dd> </dl>
-		<dl> <dt>Outlet name</dt> <dd data-bind="text: outletName"></dd> </dl>
+		<dl data-bind="fadeVisible: outletName">
+			<dt>Outlet name</dt> <dd data-bind="text: outletName"></dd>
+		</dl>
 		<dl> <dt>Born</dt> <dd data-bind="text: bornAgo"></dd> </dl>
 	</div>
 
 	<!-- OutletQuickStats view -->
-	<div id="outlet-quick-stats">
+	<div id="outlet-quick-stats" data-bind="fadeVisible: name">
 		<h1>Outlet</h1>
 		<dl> <dt>Name</dt> <dd data-bind="text: name"></dd> </dl>
 		<dl> <dt>Circulation</dt> <dd data-bind="text: circulation"></dd> </dl>
