@@ -84,6 +84,7 @@ OutletModel = function () {
 		self.email(api.ContactMethods.Email);
 	}
 
+	//don't abstract this method, it is clearer when WET
 	self.mapFromAPIUrl = function (url) {
 		$.getJSON(url, function (data) {
 			self.mapFromAPI(data);
@@ -112,17 +113,16 @@ getting lost.
 ContactQuickStatsViewModel = function () {
 	self = this;
 
-	//these are the only values we care about in this particular view
+	//notice we don't care about a subset of the Models properties in each view
 	self.name = Models.contact.name;
 	self.phone = Models.contact.phone;
 	self.email = Models.contact.email;
 	self.bornAgo = ko.computed(function () {
 		return $.timeago(Models.contact.dateOfBirth());
 	});
-	self.outletName = ko.computed(function () {
-		//we are explicit in our model references to retain flexibility
-		return Models.outlet.name();
-	});
+	//we are explicit in our model references because we don't want to restrict
+	//ourselves to a one-to-one Model/ViewModel relationship
+	self.outletName = Models.outlet.name;
 }
 
 OutletQuickStatsViewModel = function () {
@@ -176,7 +176,7 @@ $.getJSON("json/combined.js", function (data) {
 });
 
 
-//Model to element mapping, in a straightforward way
+//Model to element mapping, left WET for understandability
 ko.applyBindings(new ContactQuickStatsViewModel(), $("#contact-quick-stats").get(0));
 ko.applyBindings(new OutletQuickStatsViewModel(), $("#outlet-quick-stats").get(0));
 
