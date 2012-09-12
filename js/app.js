@@ -8,12 +8,6 @@ describes how you can keep a potentially sophisticated UI simple by splitting it
 into three parts: MODEL, VIEW, and VIEWMODEL (MVVM).
 
 --------------------------------------------------------------------------------
-
-MODEL: your application’s stored data. This data represents objects and operations
-in your business domain (e.g., bank accounts that can perform money transfers) and
-is independent of any UI. When using KO, you will usually make Ajax calls to some
-server-side code to read and write this stored model data.
-
 */
 
 Model = function (apiMap){
@@ -49,6 +43,15 @@ Model = function (apiMap){
 
 	//self.save = fn () {} //POST updates to server
 };
+
+/*
+
+MODEL: your application’s stored data. This data represents objects and operations
+in your business domain (e.g., bank accounts that can perform money transfers) and
+is independent of any UI. When using KO, you will usually make Ajax calls to some
+server-side code to read and write this stored model data.
+
+*/
 
 Models = {};
 
