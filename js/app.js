@@ -1,7 +1,7 @@
 /* 
 A strict MVVM implementation! All in one file to make it easier to follow along.
 
-MVVM as defined in Knockout.js Documentation:
+MVVM as defined in Knockout.js Documentation: (additional quotes throughout)
 
 Model-View-View Model (MVVM) is a design pattern for building user interfaces. It
 describes how you can keep a potentially sophisticated UI simple by splitting it
@@ -22,7 +22,7 @@ server-side code to read and write this stored model data.
 ContactModel = function () {
 	var self = this;
 	//all of the values we ever care about w/ contacts on the client
-	//not ALL of the API provided properties are here.
+	//API-provided properties that we'll never use can be omitted here
 	self.name = ko.observable("");
 	self.phone = ko.observable("");
 	self.email = ko.observable("");
@@ -48,7 +48,7 @@ ContactModel = function () {
 OutletModel = function () {
 	var self = this;
 	//all of the values we ever care about w/ outlets on the client
-	//not ALL of the API provided properties are here.
+	//API-provided properties that we'll never use can be omitted here
 	self.name = ko.observable("");
 	self.circulation = ko.observable(0);
 	self.phone = ko.observable("");
@@ -91,15 +91,18 @@ getting lost.
 ContactQuickStatsViewModel = function () {
 	self = this;
 
-	//notice we don't care about a subset of the Models properties in each view
+	//notice we only care about a subset of the Models properties in each view,
+	//we DO have a one-to-one relationship with Views and View Models
 	self.name = Models.contact.name;
 	self.phone = Models.contact.phone;
 	self.email = Models.contact.email;
 	self.bornAgo = ko.computed(function () {
 		return $.timeago(Models.contact.dateOfBirth());
 	});
-	//we are explicit in our model references because we don't want to restrict
-	//ourselves to a one-to-one Model/ViewModel relationship
+	//we are explicit in our Model references because we DO NOT want to limit
+	//ourselves to a one-to-one relationship with View Models and Models.
+	//we could have several Views/View Models that represent
+	//some subset of our Models (ContactQuickStats, ContactEmailForm...)
 	self.outletName = Models.outlet.name;
 }
 
@@ -108,7 +111,7 @@ OutletQuickStatsViewModel = function () {
 
 	self.name = Models.outlet.name;
 	self.circulation = ko.computed(function () {
-		//formatting logic belongs in the ViewModel.
+		//formatting logic belongs in the View Model.
 		return parseInt(Models.outlet.circulation()).toFormattedString();
 	});
 }
@@ -142,7 +145,7 @@ setTimeout(function () {
 // 	Models.outlet.mapFromAPI(data.Outlet);
 // });
 
-/* update the logical model. the value is synced with any relevant viewModel.
+/* update the logical model. the value is synced with any relevant View Model.
 try these:
 
 Models.outlet.name("National Enquirer")
