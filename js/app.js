@@ -36,9 +36,7 @@ Model = function (apiMap){
 	}
 
 	self.mapFromAPIUrl = function (url) {
-		$.getJSON(url, function (data) {
-			self.mapFromAPI(data);
-		});
+		$.getJSON(url, self.mapFromAPI);
 	}
 
 	//self.save = fn () {} //POST updates to server
