@@ -1,4 +1,4 @@
-/* 
+/*
 A strict MVVM implementation! All in one file to make it easier to follow along.
 
 MVVM as defined in Knockout.js Documentation: (additional quotes throughout)
@@ -19,21 +19,30 @@ server-side code to read and write this stored model data.
 */
 // /KNOCKOUT/MODELS
 
-ContactModel = function () {
+BaseModel = function (){
 	var self = this;
-	//all of the values we ever care about w/ contacts on the client
-	//API-provided properties that we'll never use can be omitted here
-	self.name = ko.observable("");
-	self.phone = ko.observable("");
-	self.email = ko.observable("");
-	self.dateOfBirth = ko.observable("");
+
+	self.init = function () {
+		self.apiMap.forEach(function (prop) {
+			self[prop.clientKey] = ko.observable(prop.default);
+		});
+		return self;
+	}
 
 	self.mapFromAPI = function (api) {
-		//API to Model mapping. take what we want, how we want it.
-		self.name(api.Name);
-		self.phone(api.ContactMethods.Phone);
-		self.email(api.ContactMethods.Email);
-		self.dateOfBirth(api.DateOfBirth);
+		self.apiMap.forEach(function (prop) {
+			//convert "a.b.c" to api[a][b][c]
+			prop.apiKey.split(".").forEach(function (piece, index) {
+				if ( index == 0 && !api[piece] ) {
+					console.warn("'" + prop.clientKey
+						+ "' -> '"+ prop.apiKey +"' not found in the API");
+				} else if ( index == 0 && api[piece] ) {
+					self[prop.clientKey](api[piece]);
+				} else if ( self[prop.clientKey] ) {
+					self[prop.clientKey](self[prop.clientKey]()[piece]);
+				}
+			});
+		});
 	}
 
 	self.mapFromAPIUrl = function (url) {
@@ -43,33 +52,39 @@ ContactModel = function () {
 	}
 
 	//self.save = fn () {} //POST updates to server
+
+	return self;
+};
+
+ContactModel = function () {
+	var self = new BaseModel();
+
+	//all of the values we ever care about w/ contacts on the client
+	//API-provided properties that we'll never use can be omitted here
+	self.apiMap = [
+		{  clientKey: "name", apiKey: "Name", default: "" },
+		{  clientKey: "phone", apiKey: "ContactMethods.Phone", default: "" },
+		{  clientKey: "email", apiKey: "ContactMethods.Email", default: "" },
+		{  clientKey: "dateOfBirth", apiKey: "DateOfBirth", default: ""  },
+		{  clientKey: "favoriteColor", apiKey: "booze.favcolor", default: ""  }
+	]
+
+	return self.init();
 }
 
 OutletModel = function () {
-	var self = this;
-	//all of the values we ever care about w/ outlets on the client
+	var self = new BaseModel();
+
+	//all of the values we ever care about w/ contacts on the client
 	//API-provided properties that we'll never use can be omitted here
-	self.name = ko.observable("");
-	self.circulation = ko.observable(0);
-	self.phone = ko.observable("");
-	self.email = ko.observable("");
+	self.apiMap = [
+		{  clientKey: "name", apiKey: "Name", default: "" },
+		{  clientKey: "circulation", apiKey: "Circulation", default: "" },
+		{  clientKey: "phone", apiKey: "ContactMethods.Phone", default: "" },
+		{  clientKey: "email", apiKey: "ContactMethods.Email", default: ""  }
+	]
 
-	self.mapFromAPI = function (api) {
-		//API to Model mapping. take what we want, how we want it.
-		self.name(api.Name);
-		self.circulation(api.Circulation);
-		self.phone(api.ContactMethods.Phone);
-		self.email(api.ContactMethods.Email);
-	}
-
-	//don't abstract this method, it is clearer when WET
-	self.mapFromAPIUrl = function (url) {
-		$.getJSON(url, function (data) {
-			self.mapFromAPI(data);
-		});
-	}
-
-	//self.save = fn () {} //POST updates to server
+	return self.init();
 }
 
 //--------------------------------------------------------------------------------
@@ -123,8 +138,8 @@ OutletQuickStatsViewModel = function () {
 
 Models = {};
 
-Models.contact = new ContactModel();
-Models.outlet = new OutletModel();
+Models.contact = new ContactModel;
+Models.outlet = new OutletModel;
 
 //Populating our Models from the server
 
