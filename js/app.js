@@ -54,18 +54,18 @@ server-side code to read and write this stored model data.
 Models = {};
 
 Models.contact = new Model([
-	{  clientKey: "name", apiKey: "Name", default: "" },
-	{  clientKey: "phone", apiKey: "ContactMethods.Phone", default: "" },
-	{  clientKey: "email", apiKey: "ContactMethods.Email", default: "" },
-	{  clientKey: "dateOfBirth", apiKey: "DateOfBirth", default: ""  },
-	{  clientKey: "favoriteColor", apiKey: "Interests.FavColor", default: ""  }
+	{ clientKey: "name", apiKey: "Name", default: "" },
+	{ clientKey: "phone", apiKey: "ContactMethods.Phone", default: "" },
+	{ clientKey: "email", apiKey: "ContactMethods.Email", default: "" },
+	{ clientKey: "dateOfBirth", apiKey: "DateOfBirth", default: ""  },
+	{ clientKey: "favoriteColor", apiKey: "Interests.FavColor", default: ""  }
 ]);
 
 Models.outlet = new Model([
-	{  clientKey: "name", apiKey: "Name", default: "" },
-	{  clientKey: "circulation", apiKey: "Circulation", default: "" },
-	{  clientKey: "phone", apiKey: "ContactMethods.Phone", default: "" },
-	{  clientKey: "email", apiKey: "ContactMethods.Email", default: ""  }
+	{ clientKey: "name", apiKey: "Name", default: "" },
+	{ clientKey: "circulation", apiKey: "Circulation", default: "" },
+	{ clientKey: "phone", apiKey: "ContactMethods.Phone", default: "" },
+	{ clientKey: "email", apiKey: "ContactMethods.Email", default: ""  }
 ]);
 
 
