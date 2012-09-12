@@ -7,33 +7,29 @@ Model-View-View Model (MVVM) is a design pattern for building user interfaces. I
 describes how you can keep a potentially sophisticated UI simple by splitting it
 into three parts: MODEL, VIEW, and VIEWMODEL (MVVM).
 
-*/
+--------------------------------------------------------------------------------
 
-//--------------------------------------------------------------------------------
-
-/*
 MODEL: your application’s stored data. This data represents objects and operations
 in your business domain (e.g., bank accounts that can perform money transfers) and
 is independent of any UI. When using KO, you will usually make Ajax calls to some
 server-side code to read and write this stored model data.
-*/
-// /KNOCKOUT/MODELS
 
-BaseModel = function (){
+*/
+
+Model = function (apiMap){
 	var self = this;
 
-	self.init = function () {
-		self.apiMap.forEach(function (prop) {
-			self[prop.clientKey] = ko.observable(prop.default);
-		});
-		return self;
-	}
+	apiMap.forEach(function (prop) {
+		self[prop.clientKey] = ko.observable(prop.default);
+	});
 
 	self.mapFromAPI = function (api) {
-		self.apiMap.forEach(function (prop) {
+		apiMap.forEach(function (prop) {
 			//convert "a.b.c" to api[a][b][c]
 			prop.apiKey.split(".").forEach(function (piece, index) {
 				if ( index == 0 && !api[piece] ) {
+					//gracefully fail and warn if we try to map something
+					//that we don't find in the API
 					console.warn("'" + prop.clientKey
 						+ "' -> '"+ prop.apiKey +"' not found in the API");
 				} else if ( index == 0 && api[piece] ) {
@@ -52,44 +48,28 @@ BaseModel = function (){
 	}
 
 	//self.save = fn () {} //POST updates to server
-
-	return self;
 };
 
-ContactModel = function () {
-	var self = new BaseModel();
+Models = {};
 
-	//all of the values we ever care about w/ contacts on the client
-	//API-provided properties that we'll never use can be omitted here
-	self.apiMap = [
-		{  clientKey: "name", apiKey: "Name", default: "" },
-		{  clientKey: "phone", apiKey: "ContactMethods.Phone", default: "" },
-		{  clientKey: "email", apiKey: "ContactMethods.Email", default: "" },
-		{  clientKey: "dateOfBirth", apiKey: "DateOfBirth", default: ""  },
-		{  clientKey: "favoriteColor", apiKey: "booze.favcolor", default: ""  }
-	]
+Models.contact = new Model([
+	{  clientKey: "name", apiKey: "Name", default: "" },
+	{  clientKey: "phone", apiKey: "ContactMethods.Phone", default: "" },
+	{  clientKey: "email", apiKey: "ContactMethods.Email", default: "" },
+	{  clientKey: "dateOfBirth", apiKey: "DateOfBirth", default: ""  },
+	{  clientKey: "favoriteColor", apiKey: "Interests.FavColor", default: ""  }
+]);
 
-	return self.init();
-}
+Models.outlet = new Model([
+	{  clientKey: "name", apiKey: "Name", default: "" },
+	{  clientKey: "circulation", apiKey: "Circulation", default: "" },
+	{  clientKey: "phone", apiKey: "ContactMethods.Phone", default: "" },
+	{  clientKey: "email", apiKey: "ContactMethods.Email", default: ""  }
+]);
 
-OutletModel = function () {
-	var self = new BaseModel();
 
-	//all of the values we ever care about w/ contacts on the client
-	//API-provided properties that we'll never use can be omitted here
-	self.apiMap = [
-		{  clientKey: "name", apiKey: "Name", default: "" },
-		{  clientKey: "circulation", apiKey: "Circulation", default: "" },
-		{  clientKey: "phone", apiKey: "ContactMethods.Phone", default: "" },
-		{  clientKey: "email", apiKey: "ContactMethods.Email", default: ""  }
-	]
+/*--------------------------------------------------------------------------------
 
-	return self.init();
-}
-
-//--------------------------------------------------------------------------------
-
-/*
 VIEW MODEL: a pure-code representation of the data and operations on a UI. For
 example, if you’re implementing a list editor, your view model would be an object
 holding a list of items, and exposing methods to add and remove items.
@@ -100,8 +80,8 @@ data the user is working with. When using KO, your view models are pure JavaScri
 objects that hold no knowledge of HTML. Keeping the view model abstract in this
 way lets it stay simple, so you can manage more sophisticated behaviors without
 getting lost.
+
 */
-// /KNOCKOUT/VIEWMODELS
 
 ContactQuickStatsViewModel = function () {
 	self = this;
@@ -134,31 +114,27 @@ OutletQuickStatsViewModel = function () {
 
 //--------------------------------------------------------------------------------
 
-//KNOCKOUT/CONTROLLERS?
-
-Models = {};
-
-Models.contact = new ContactModel;
-Models.outlet = new OutletModel;
-
-//Populating our Models from the server
-
 //Model to element mapping, left WET for understandability
 ko.applyBindings(new ContactQuickStatsViewModel(), $("#contact-quick-stats")[0]);
 ko.applyBindings(new OutletQuickStatsViewModel(), $("#outlet-quick-stats")[0]);
 
+
+//Populating our Models from the server
+
 //one JSON per Model...
 Models.contact.mapFromAPIUrl("json/contact.js");
+
 console.log("Simulating a slow API... Waiting 5 seconds to load Outlet.");
+
 setTimeout(function () {
 	Models.outlet.mapFromAPIUrl("json/outlet.js");
 }, 5000);
 
 //or one JSON for both models
-// $.getJSON("json/combined.js", function (data) {
-// 	Models.contact.mapFromAPI(data.Contact);
-// 	Models.outlet.mapFromAPI(data.Outlet);
-// });
+//$.getJSON("json/combined.js", function (data) {
+//	Models.contact.mapFromAPI(data.Contact);
+//	Models.outlet.mapFromAPI(data.Outlet);
+//});
 
 /* update the logical model. the value is synced with any relevant View Model.
 try these:
