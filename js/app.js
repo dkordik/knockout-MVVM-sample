@@ -13,9 +13,9 @@ into three parts: MODEL, VIEW, and VIEWMODEL (MVVM).
 Model = function (apiMap){
 	var self = this;
 
-	//Initialize our properties right away so a View Model that maps to them
-	//always has something to bind to, even if we haven't populated our
-	//models yet, say, via AJAX
+	//IMPORTANT! We initialize our properties right away so a View Model that
+	//maps to this Model always has something to bind to, even when we haven't
+	//populated our models yet, say, via AJAX
 	apiMap.forEach(function (prop) {
 		self[prop.clientKey] = ko.observable(prop.default);
 	});
@@ -91,17 +91,17 @@ ContactQuickStatsViewModel = function () {
 	self = this;
 
 	//notice we only care about a subset of the Models properties in each view,
-	//we DO have a one-to-one relationship with Views and View Models
+	//we have a one-to-one relationship with Views and View Models
 	self.name = Models.contact.name;
 	self.phone = Models.contact.phone;
 	self.email = Models.contact.email;
 	self.bornAgo = ko.computed(function () {
 		return $.timeago(Models.contact.dateOfBirth());
 	});
-	//we are explicit in our Model references because we DO NOT want to limit
-	//ourselves to a one-to-one relationship with View Models and Models.
-	//we could have several Views/View Models that represent
-	//some subset of our Models (ContactQuickStats, ContactEmailForm...)
+	//however, we are explicit in our Model references because we DO NOT want to
+	//limit ourselves to a one-to-one relationship with View Models and Models.
+	//we could have several View Models that represent some subset of
+	//our Models (ContactQuickStats, ContactEmailForm...)
 	self.outletName = Models.outlet.name;
 }
 
@@ -110,7 +110,7 @@ OutletQuickStatsViewModel = function () {
 
 	self.name = Models.outlet.name;
 	self.circulation = ko.computed(function () {
-		//formatting logic belongs in the View Model.
+		//formatting logic belongs in the client side View Model when possible.
 		return parseInt(Models.outlet.circulation()).toFormattedString();
 	});
 }
