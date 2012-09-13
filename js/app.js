@@ -13,6 +13,9 @@ into three parts: MODEL, VIEW, and VIEWMODEL (MVVM).
 Model = function (apiMap){
 	var self = this;
 
+	//Initialize our properties right away so a View Model that maps to them
+	//always has something to bind to, even if we haven't populated our
+	//models yet, say, via AJAX
 	apiMap.forEach(function (prop) {
 		self[prop.clientKey] = ko.observable(prop.default);
 	});
