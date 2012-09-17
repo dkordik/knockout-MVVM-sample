@@ -10,8 +10,11 @@ into three parts: MODEL, VIEW, and VIEWMODEL (MVVM).
 --------------------------------------------------------------------------------
 */
 
-Model = function (apiMap){
+Model = function (apiMap, options) {
 	var self = this;
+
+	if (options && options.apiUrl) { self.apiUrl = options.apiUrl; }
+	if (options && options.apiNode) { self.apiNode = options.apiNode; }
 
 	//IMPORTANT! We initialize our properties right away so a View Model that
 	//maps to this Model always has something to bind to, even when we haven't
@@ -21,6 +24,9 @@ Model = function (apiMap){
 	});
 
 	self.mapFromAPI = function (api) {
+		if (self.apiNode) {
+			api = api[self.apiNode];
+		}
 		apiMap.forEach(function (prop) {
 			//convert "a.b.c" to api[a][b][c]
 			prop.apiKey.split(".").forEach(function (piece, index) {
@@ -38,12 +44,43 @@ Model = function (apiMap){
 		});
 	}
 
-	self.mapFromAPIUrl = function (url) {
-		$.getJSON(url, self.mapFromAPI);
-	}
-
 	//self.save = fn () {} //POST updates to server
 };
+
+Models = {};
+
+Models._loadQueue = [];
+
+Models.using = function (models) {
+	//add models to the load queue
+	Models._loadQueue = Models._loadQueue.concat(models);
+}
+
+Models._load = function () {
+	var urlIndex = {}
+	//maps endpoints to models that use them, one to many
+	//{ 
+	//	"foo.com/data1.json": [model1, model2...],
+	//	"foo.com/data2.json": [model3] 
+	//}
+	Models._loadQueue.forEach(function (model) {
+		if (!urlIndex[model.apiUrl]) {
+			urlIndex[model.apiUrl] = [];
+		}
+		urlIndex[model.apiUrl].push(model);
+	});
+	Models._loadQueue = [];
+
+	//then loads each endpoint and maps to the necessary models
+	$.each(urlIndex, function (url, models) {
+		$.getJSON(url, function (data) {
+			$.unique(models).forEach(function (model) {
+				model.mapFromAPI(data);	
+			});
+		});
+	});
+}
+
 
 /*
 
@@ -54,22 +91,25 @@ server-side code to read and write this stored model data.
 
 */
 
-Models = {};
-
 Models.contact = new Model([
 	{ clientKey: "name", apiKey: "Name", default: "" },
 	{ clientKey: "phone", apiKey: "ContactMethods.Phone", default: "" },
 	{ clientKey: "email", apiKey: "ContactMethods.Email", default: "" },
 	{ clientKey: "dateOfBirth", apiKey: "DateOfBirth", default: ""  },
 	{ clientKey: "favoriteColor", apiKey: "Interests.FavColor", default: ""  }
-]);
+], {
+	apiUrl: "json/contact.js"
+});
 
 Models.outlet = new Model([
 	{ clientKey: "name", apiKey: "Name", default: "" },
 	{ clientKey: "circulation", apiKey: "Circulation", default: "" },
 	{ clientKey: "phone", apiKey: "ContactMethods.Phone", default: "" },
 	{ clientKey: "email", apiKey: "ContactMethods.Email", default: ""  }
-]);
+], {
+	apiUrl: "json/combined.js",
+	apiNode: "Outlet"
+});
 
 
 /*--------------------------------------------------------------------------------
@@ -89,6 +129,7 @@ getting lost.
 
 ContactQuickStatsViewModel = function () {
 	self = this;
+	Models.using([Models.contact, Models.outlet]);
 
 	//notice we only care about a subset of the Models properties in each view,
 	//we have a one-to-one relationship with Views and View Models
@@ -107,6 +148,7 @@ ContactQuickStatsViewModel = function () {
 
 OutletQuickStatsViewModel = function () {
 	self = this;
+	Models.using([Models.outlet]);
 
 	self.name = Models.outlet.name;
 	self.circulation = ko.computed(function () {
@@ -125,20 +167,7 @@ ko.applyBindings(new OutletQuickStatsViewModel(), $("#outlet-quick-stats")[0]);
 
 //Populating our Models from the server
 
-//one JSON per Model...
-Models.contact.mapFromAPIUrl("json/contact.js");
-
-console.log("Simulating a slow API... Waiting 5 seconds to load Outlet.");
-
-setTimeout(function () {
-	Models.outlet.mapFromAPIUrl("json/outlet.js");
-}, 5000);
-
-//or one JSON for both models
-//$.getJSON("json/combined.js", function (data) {
-//	Models.contact.mapFromAPI(data.Contact);
-//	Models.outlet.mapFromAPI(data.Outlet);
-//});
+Models._load();
 
 /* update the logical model. the value is synced with any relevant View Model.
 try these:
