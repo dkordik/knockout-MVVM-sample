@@ -10,8 +10,11 @@ into three parts: MODEL, VIEW, and VIEWMODEL (MVVM).
 --------------------------------------------------------------------------------
 */
 
-Model = function (apiMap){
+Model = function (apiMap, options) {
 	var self = this;
+
+	if (options && options.apiUrl) { self.apiUrl = options.apiUrl; }
+	if (options && options.apiNode) { self.apiNode = options.apiNode; }
 
 	//IMPORTANT! We initialize our properties right away so a View Model that
 	//maps to this Model always has something to bind to, even when we haven't
@@ -21,6 +24,9 @@ Model = function (apiMap){
 	});
 
 	self.mapFromAPI = function (api) {
+		if (self.apiNode) {
+			api = api[self.apiNode];
+		}
 		apiMap.forEach(function (prop) {
 			//convert "a.b.c" to api[a][b][c]
 			prop.apiKey.split(".").forEach(function (piece, index) {
@@ -38,12 +44,52 @@ Model = function (apiMap){
 		});
 	}
 
-	self.mapFromAPIUrl = function (url) {
-		$.getJSON(url, self.mapFromAPI);
-	}
-
 	//self.save = fn () {} //POST updates to server
 };
+
+Models = {};
+
+Models._loadQueue = [];
+
+//using - map Model properties to our View Model
+// and add Model to our load queue
+Models.using = function (options) {
+	var self = this;
+	var model = options.context[options.model] = {};
+
+	//cherrypick the model properties we want
+	options.properties.forEach(function (prop) {
+		model[prop] = self[options.model][prop];
+	});
+
+	//queue this model for load
+	self._loadQueue.push(self[options.model]);
+}
+
+Models._load = function () {
+	var urlIndex = {}
+	//maps endpoints to models that use them, one to many
+	//{ 
+	//	"foo.com/data1.json": [model1, model2...],
+	//	"foo.com/data2.json": [model3] 
+	//}
+	this._loadQueue.forEach(function (model) {
+		if (!urlIndex[model.apiUrl]) {
+			urlIndex[model.apiUrl] = [];
+		}
+		urlIndex[model.apiUrl].push(model);
+	});
+	this._loadQueue = [];
+
+	//then loads each endpoint and maps to the necessary models
+	$.each(urlIndex, function (url, models) {
+		$.getJSON(url, function (data) {
+			$.unique(models).forEach(function (model) {
+				model.mapFromAPI(data);	
+			});
+		});
+	});
+}
 
 /*
 
@@ -54,22 +100,25 @@ server-side code to read and write this stored model data.
 
 */
 
-Models = {};
-
 Models.contact = new Model([
 	{ clientKey: "name", apiKey: "Name", default: "" },
 	{ clientKey: "phone", apiKey: "ContactMethods.Phone", default: "" },
 	{ clientKey: "email", apiKey: "ContactMethods.Email", default: "" },
 	{ clientKey: "dateOfBirth", apiKey: "DateOfBirth", default: ""  },
 	{ clientKey: "favoriteColor", apiKey: "Interests.FavColor", default: ""  }
-]);
+], {
+	apiUrl: "json/contact.js"
+});
 
 Models.outlet = new Model([
 	{ clientKey: "name", apiKey: "Name", default: "" },
 	{ clientKey: "circulation", apiKey: "Circulation", default: "" },
 	{ clientKey: "phone", apiKey: "ContactMethods.Phone", default: "" },
 	{ clientKey: "email", apiKey: "ContactMethods.Email", default: ""  }
-]);
+], {
+	apiUrl: "json/combined.js",
+	apiNode: "Outlet"
+});
 
 
 /*--------------------------------------------------------------------------------
@@ -88,30 +137,53 @@ getting lost.
 */
 
 ContactQuickStatsViewModel = function () {
-	self = this;
+	var self = this;
 
 	//notice we only care about a subset of the Models properties in each view,
 	//we have a one-to-one relationship with Views and View Models
-	self.name = Models.contact.name;
-	self.phone = Models.contact.phone;
-	self.email = Models.contact.email;
-	self.bornAgo = ko.computed(function () {
-		return $.timeago(Models.contact.dateOfBirth());
+	Models.using({
+		context: self, //TODO: would love if I could implicitly get context...
+		model: "contact",
+		properties: [ 
+			"name",
+			"phone",
+			"email",
+			"dateOfBirth"
+		]
 	});
+
+	self.bornAgo = ko.computed(function () {
+		return $.timeago(self.contact.dateOfBirth());
+	});
+
 	//however, we are explicit in our Model references because we DO NOT want to
 	//limit ourselves to a one-to-one relationship with View Models and Models.
 	//we could have several View Models that represent some subset of
 	//our Models (ContactQuickStats, ContactEmailForm...)
-	self.outletName = Models.outlet.name;
+	Models.using({
+		context: self,
+		model: "outlet",
+		properties: [ 
+			"name"
+		]
+	});
 }
 
 OutletQuickStatsViewModel = function () {
-	self = this;
+	var self = this;
 
-	self.name = Models.outlet.name;
-	self.circulation = ko.computed(function () {
+	Models.using({
+		context: self,
+		model: "outlet",
+		properties: [ 
+			"name",
+			"circulation"
+		]
+	});
+
+	self.formattedCirculation = ko.computed(function () {
 		//formatting logic belongs in the client side View Model when possible.
-		return parseInt(Models.outlet.circulation()).toFormattedString();
+		return parseInt(self.outlet.circulation()).toFormattedString();
 	});
 }
 
@@ -122,23 +194,8 @@ OutletQuickStatsViewModel = function () {
 ko.applyBindings(new ContactQuickStatsViewModel(), $("#contact-quick-stats")[0]);
 ko.applyBindings(new OutletQuickStatsViewModel(), $("#outlet-quick-stats")[0]);
 
-
 //Populating our Models from the server
-
-//one JSON per Model...
-Models.contact.mapFromAPIUrl("json/contact.js");
-
-console.log("Simulating a slow API... Waiting 5 seconds to load Outlet.");
-
-setTimeout(function () {
-	Models.outlet.mapFromAPIUrl("json/outlet.js");
-}, 5000);
-
-//or one JSON for both models
-//$.getJSON("json/combined.js", function (data) {
-//	Models.contact.mapFromAPI(data.Contact);
-//	Models.outlet.mapFromAPI(data.Outlet);
-//});
+Models._load();
 
 /* update the logical model. the value is synced with any relevant View Model.
 try these:

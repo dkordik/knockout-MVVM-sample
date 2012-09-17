@@ -9,20 +9,20 @@
 	<!-- ContactQuickStats view -->
 	<div id="contact-quick-stats">
 		<h1>Contact Quick Stats</h1>
-		<dl> <dt>Name</dt> <dd data-bind="text: name"></dd> </dl>
-		<dl> <dt>Phone</dt> <dd data-bind="text: phone"></dd> </dl>
-		<dl> <dt>Email</dt> <dd data-bind="text: email"></dd> </dl>
-		<dl data-bind="fadeVisible: outletName">
-			<dt>Outlet name</dt> <dd data-bind="text: outletName"></dd>
+		<dl> <dt>Name</dt> <dd data-bind="text: contact.name"></dd> </dl>
+		<dl> <dt>Phone</dt> <dd data-bind="text: contact.phone"></dd> </dl>
+		<dl> <dt>Email</dt> <dd data-bind="text: contact.email"></dd> </dl>
+		<dl data-bind="fadeVisible: outlet.name">
+			<dt>Outlet name</dt> <dd data-bind="text: outlet.name"></dd>
 		</dl>
 		<dl> <dt>Born</dt> <dd data-bind="text: bornAgo"></dd> </dl>
 	</div>
 
 	<!-- OutletQuickStats view -->
-	<div id="outlet-quick-stats" data-bind="fadeVisible: name">
+	<div id="outlet-quick-stats" data-bind="fadeVisible: outlet.name">
 		<h1>Outlet</h1>
-		<dl> <dt>Name</dt> <dd data-bind="text: name"></dd> </dl>
-		<dl> <dt>Circulation</dt> <dd data-bind="text: circulation"></dd> </dl>
+		<dl> <dt>Name</dt> <dd data-bind="text: outlet.name"></dd> </dl>
+		<dl> <dt>Circulation</dt> <dd data-bind="text: formattedCirculation"></dd> </dl>
 	</div>
 
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
