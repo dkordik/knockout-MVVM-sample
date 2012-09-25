@@ -10,7 +10,7 @@ into three parts: MODEL, VIEW, and VIEWMODEL (MVVM).
 --------------------------------------------------------------------------------
 */
 
-Model = function (apiMap, options) {
+window.Model = function (apiMap, options) {
 	var self = this;
 
 	if (options && options.apiUrl) { self.apiUrl = options.apiUrl; }
@@ -47,7 +47,7 @@ Model = function (apiMap, options) {
 	//self.save = fn () {} //POST updates to server
 };
 
-Models = {};
+window.Models = {};
 
 Models._loadQueue = [];
 
@@ -128,7 +128,7 @@ getting lost.
 */
 
 ContactQuickStatsViewModel = function () {
-	self = this;
+	var self = this;
 	Models.using([Models.contact, Models.outlet]);
 
 	//notice we only care about a subset of the Models properties in each view,
@@ -147,7 +147,7 @@ ContactQuickStatsViewModel = function () {
 }
 
 OutletQuickStatsViewModel = function () {
-	self = this;
+	var self = this;
 	Models.using([Models.outlet]);
 
 	self.name = Models.outlet.name;
