@@ -30,13 +30,15 @@ window.Model = function (apiMap, options) {
 		apiMap.forEach(function (prop) {
 			//convert "a.b.c" to api[a][b][c]
 			prop.apiKey.split(".").forEach(function (piece, index) {
-				if ( index == 0 && !api[piece] ) {
-					//gracefully fail and warn if we try to map something
-					//that we don't find in the API
-					console.warn("'" + prop.clientKey
-						+ "' -> '"+ prop.apiKey +"' not found in the API");
-				} else if ( index == 0 && api[piece] ) {
-					self[prop.clientKey](api[piece]);
+				if ( index == 0 ) {
+					if ( api[piece] ) {
+						self[prop.clientKey](api[piece]);
+					} else {
+						//gracefully fail and warn if we try to map something
+						//that we don't find in the API
+						console.warn("'" + prop.clientKey + "' -> '" + prop.apiKey
+							+ "' not found in the API");
+					}
 				} else if ( self[prop.clientKey] ) {
 					self[prop.clientKey](self[prop.clientKey]()[piece]);
 				}
