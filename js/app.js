@@ -24,6 +24,7 @@ Models.contact = new Model([
 	{ clientKey: "favoriteColor", apiKey: "Interests.FavColor", default: ""  }
 ], {
 	apiUrl: "json/contact.js"
+	//,params: { id: 102 }
 });
 
 Models.outlet = new Model([
@@ -54,7 +55,6 @@ getting lost.
 
 ContactQuickStatsViewModel = function () {
 	var self = this;
-	Models.using([Models.contact, Models.outlet]);
 
 	//notice we only care about a subset of the Models properties in each view,
 	//we have a one-to-one relationship with Views and View Models
@@ -73,7 +73,6 @@ ContactQuickStatsViewModel = function () {
 
 OutletQuickStatsViewModel = function () {
 	var self = this;
-	Models.using([Models.outlet]);
 
 	self.name = Models.outlet.name;
 	self.circulation = ko.computed(function () {
@@ -81,18 +80,6 @@ OutletQuickStatsViewModel = function () {
 		return parseInt(Models.outlet.circulation()).toFormattedString();
 	});
 }
-
-
-//--------------------------------------------------------------------------------
-
-//Model to element mapping, left WET for understandability
-ko.applyBindings(new ContactQuickStatsViewModel(), $("#contact-quick-stats")[0]);
-ko.applyBindings(new OutletQuickStatsViewModel(), $("#outlet-quick-stats")[0]);
-
-
-//Populating our Models from the server
-
-Models._load();
 
 /* update the logical model. the value is synced with any relevant View Model.
 try these:
@@ -102,3 +89,19 @@ Models.outlet.name("National Enquirer")
 Models.contact.name("Bill Brasky")
 
 */
+
+/*--------------------------------------------------------------------------------
+
+THE MAGIC SAUCE. DOM to ViewModel mappings. The only thing the implementor
+really needs to tell us. Behind the scenes, this:
+
+	-Applies knockout bindings to DOM elements
+	-Finds out which Models are being used in your ViewModels, and queues
+		them up for AJAX load (only loads each unique resource once)
+
+*/
+
+Ropes({
+	"#contact-quick-stats": ContactQuickStatsViewModel,
+	"#outlet-quick-stats": OutletQuickStatsViewModel
+})

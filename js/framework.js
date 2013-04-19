@@ -49,33 +49,39 @@ window.Models = {};
 // });
 
 
-Models._loadQueue = [];
+window.Ropes = function (bindings) {
+	var modelQueue = [];
 
-Models.using = function (models) {
-	//add models to the load queue
-	Models._loadQueue = Models._loadQueue.concat(models);
-}
+	//QUEUE MODELS, APPLY BINDINGS
 
-Models._load = function () {
+	$.each(bindings, function (selector, viewModel) {
+		//Queue any used Models for load
+		var models = $.unique(viewModel.toString().match(/Models\.([a-z]+)/g))
+			.map(function (model) { //convert "Models.foo" to Models["foo"]
+				return Models[model.substring(7)]
+			});
+		modelQueue = modelQueue.concat(models);
+
+		//Apply knockout bindings
+		ko.applyBindings(new viewModel(), $(selector)[0]);
+	})
+
+
+	//LOAD DATA
+
 	var urlIndex = {}
-
-	//maps endpoints to models that use them, one to many
-	//
+	//creates index of endpoint -> model
 	// { 
 	// 	 "foo.com/data1.json": [model1, model2...],
 	// 	 "foo.com/data2.json": [model3] 
 	// }
 	//
-	//using an index like this means we are only hitting each unique
-	//endpoint once, no matter how many models reference them
-
-	Models._loadQueue.forEach(function (model) {
+	modelQueue.forEach(function (model) {
 		if (!urlIndex[model.apiUrl]) {
 			urlIndex[model.apiUrl] = [];
 		}
 		urlIndex[model.apiUrl].push(model);
 	});
-	Models._loadQueue = [];
 
 	//then loads each endpoint and maps to the necessary models
 	$.each(urlIndex, function (url, models) {
@@ -86,3 +92,4 @@ Models._load = function () {
 		});
 	});
 }
+
